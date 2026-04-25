@@ -1,0 +1,20 @@
+/* content.css — HerSafe AI injected styles */
+
+.hs-badge {
+  animation: hs-pop 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes hs-pop {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1);   }
+}
+
+.hs-badge:hover {
+  opacity: 0.85;
+  transform: scale(1.03);
+  transition: all 0.1s;
+}
+
+.hs-label, .hs-score {
+  pointer-events: none;
+}
