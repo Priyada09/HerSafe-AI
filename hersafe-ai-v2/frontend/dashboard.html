@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HerSafe AI — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:       #e8476a;
+      --pink-light: #fdedf0;
+      --pink-dark:  #c0304f;
+      --cream:      #fdf6f0;
+      --charcoal:   #1e1e2e;
+      --muted:      #6b6b80;
+      --white:      #ffffff;
+      --radius:     16px;
+      --shadow:     0 4px 24px rgba(0,0,0,0.07);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      min-height: 100vh;
+      color: var(--charcoal);
+    }
+
+    /* NAV */
+    nav {
+      background: var(--white);
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 0 #ede8f0;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; color: var(--charcoal);
+    }
+    .nav-brand span { font-size: 22px; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-user {
+      font-size: 13px; color: var(--muted);
+    }
+    .nav-user strong { color: var(--charcoal); }
+    .btn-logout {
+      padding: 8px 16px;
+      border: 1.5px solid #ede8f0;
+      border-radius: 10px;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { border-color: var(--pink); color: var(--pink); }
+
+    /* MAIN */
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 36px 24px;
+    }
+
+    /* WELCOME */
+    .welcome {
+      margin-bottom: 32px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .welcome h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: var(--charcoal);
+    }
+    .welcome p { color: var(--muted); margin-top: 4px; font-size: 14px; }
+
+    /* STATS */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.5s ease both;
+    }
+    .stat-card:nth-child(1) { animation-delay: 0.05s; }
+    .stat-card:nth-child(2) { animation-delay: 0.10s; }
+    .stat-card:nth-child(3) { animation-delay: 0.15s; }
+    .stat-card:nth-child(4) { animation-delay: 0.20s; }
+    .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--charcoal); }
+    .stat-value.danger { color: var(--pink); }
+    .stat-value.warn   { color: #f59e0b; }
+    .stat-value.safe   { color: #10b981; }
+
+    /* CTA */
+    .cta-card {
+      background: var(--pink);
+      border-radius: 20px;
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      box-shadow: 0 8px 32px rgba(232,71,106,0.25);
+      animation: fadeUp 0.5s ease 0.2s both;
+    }
+    .cta-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--white);
+    }
+    .cta-card p { color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 4px; }
+    .btn-analyze {
+      padding: 12px 24px;
+      background: var(--white);
+      color: var(--pink);
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    .btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+
+    /* HISTORY */
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      margin-bottom: 16px;
+      animation: fadeUp 0.5s ease 0.25s both;
+    }
+
+    .history-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .history-item {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      animation: fadeUp 0.4s ease both;
+      transition: transform 0.15s;
+    }
+    .history-item:hover { transform: translateX(4px); }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .badge.Dangerous  { background: #fdedf0; color: var(--pink); }
+    .badge.Suspicious { background: #fff7ed; color: #d97706; }
+    .badge.Mild       { background: #fefce8; color: #ca8a04; }
+    .badge.Safe       { background: #ecfdf5; color: #059669; }
+
+    .history-text {
+      flex: 1;
+      font-size: 13px;
+      color: var(--charcoal);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-meta { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .score-pill {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: var(--muted);
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .empty-state div { font-size: 36px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand"><img src="logo.png" alt="HerSafe AI" style="height:36px;object-fit:contain;"/></div>
+  <div class="nav-right">
+    <div class="nav-user">Welcome, <strong id="user-name">User</strong></div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<main>
+  <div class="welcome">
+    <h2>Your Safety Dashboard</h2>
+    <p>Track and review all your analyzed messages in one place.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Analyzed</div>
+      <div class="stat-value" id="stat-total">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Dangerous</div>
+      <div class="stat-value danger" id="stat-dangerous">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Suspicious</div>
+      <div class="stat-value warn" id="stat-suspicious">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Safe</div>
+      <div class="stat-value safe" id="stat-safe">0</div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-card">
+    <div>
+      <h3>Analyze a New Message</h3>
+      <p>Paste any message to check for threats or harassment.</p>
+    </div>
+    <button class="btn-analyze" onclick="window.location.href='index.html'">🔍 Analyze Now</button>
+  </div>
+
+  <!-- History -->
+  <div class="section-title">Analysis History</div>
+  <div class="history-list" id="history-list">
+    <div class="empty-state">
+      <div>📭</div>
+      <p>No analyses yet. Start by analyzing a message!</p>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Load user
+  const user = JSON.parse(localStorage.getItem('hersafe_user') || '{}');
+  if (!user.email) window.location.href = 'login.html';
+  document.getElementById('user-name').textContent = user.name || user.email;
+
+  // Load history from localStorage (will sync with MongoDB later)
+  function loadHistory() {
+    const history = JSON.parse(localStorage.getItem('hersafe_history') || '[]');
+
+    // Stats
+    document.getElementById('stat-total').textContent     = history.length;
+    document.getElementById('stat-dangerous').textContent = history.filter(h => h.category === 'Dangerous').length;
+    document.getElementById('stat-suspicious').textContent= history.filter(h => h.category === 'Suspicious').length;
+    document.getElementById('stat-safe').textContent      = history.filter(h => h.category === 'Safe' || h.category === 'Mild').length;
+
+    const list = document.getElementById('history-list');
+    if (history.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div>📭</div><p>No analyses yet. Start by analyzing a message!</p></div>`;
+      return;
+    }
+
+    list.innerHTML = history.slice().reverse().map((item, i) => `
+      <div class="history-item" style="animation-delay:${i * 0.05}s">
+        <span class="badge ${item.category}">${item.category}</span>
+        <span class="history-text">${escapeHtml(item.text)}</span>
+        <span class="score-pill">${item.score}/100</span>
+        <span class="history-meta">${item.date}</span>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function logout() {
+    localStorage.removeItem('hersafe_user');
+    window.location.href = 'login.html';
+  }
+
+  loadHistory();
+</script>
+</body>
+</html>
