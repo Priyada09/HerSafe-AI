@@ -343,7 +343,7 @@
 </div>
 
 <script>
-  const API_URL = "http://localhost:5000/analyze";
+  const API_URL = "https://hersafe-ai.onrender.com/analyze";
 
   const STYLES = {
     Safe:       { bg:"#EAF3DE", text:"#3B6D11", dot:"#639922", bar:"#639922", badgeBg:"#D4EAB8" },
@@ -481,7 +481,7 @@
     btn.textContent = "Generating...";
 
     try {
-      const res = await fetch("http://localhost:5000/report", {
+      const res = await fetch("https://hersafe-ai.onrender.com/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -519,7 +519,7 @@
     btn.textContent = "Sending...";
 
     try {
-      const res = await fetch("http://localhost:5000/alert", {
+      const res = await fetch("https://hersafe-ai.onrender.com/alert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

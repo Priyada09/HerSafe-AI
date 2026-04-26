@@ -27,7 +27,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow-y: auto;
+      overflow: hidden;
       position: relative;
     }
 
@@ -225,7 +225,7 @@
 
 <div class="container">
   <div class="brand">
-    <img src="logo_full(1).png" alt="HerSafe AI Logo" style="height:80px;object-fit:contain;margin-bottom:8px;"/>
+    <img src="logo.png" alt="HerSafe AI Logo" style="height:80px;object-fit:contain;margin-bottom:8px;"/>
     <p>Your personal safety companion</p>
   </div>
 
@@ -282,7 +282,7 @@
 </div>
 
 <script>
-  const API = 'http://localhost:5000';
+  const API = 'https://hersafe-ai.onrender.com';
 
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach((t, i) => {
