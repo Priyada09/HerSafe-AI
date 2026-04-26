@@ -17,10 +17,12 @@ from analyzer import analyze_text
 from pdf_report import generate_pdf_report
 from alert_system import send_alert_email, should_send_alert
 from auth import auth
+from forgot_password import forgot
 
 app = Flask(__name__)
 CORS(app)
 app.register_blueprint(auth)
+app.register_blueprint(forgot)
 
 
 @app.route("/", methods=["GET"])

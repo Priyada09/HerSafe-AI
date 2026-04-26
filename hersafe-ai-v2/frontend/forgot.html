@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HerSafe AI — Forgot Password</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --pink: #e8476a; --pink-dark: #c0304f;
+      --cream: #fdf6f0; --charcoal: #1e1e2e;
+      --muted: #6b6b80; --white: #ffffff;
+      --radius: 16px; --shadow: 0 8px 40px rgba(232,71,106,0.13);
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow-y: auto;
+    }
+    body::before, body::after {
+      content: ''; position: fixed; border-radius: 50%;
+      filter: blur(80px); opacity: 0.25; z-index: 0;
+    }
+    body::before { width: 500px; height: 500px; background: var(--pink); top: -150px; right: -100px; }
+    body::after  { width: 400px; height: 400px; background: #ffb3c6; bottom: -100px; left: -80px; }
+
+    .container { position: relative; z-index: 1; width: 100%; max-width: 460px; padding: 24px; }
+
+    .brand { text-align: center; margin-bottom: 28px; animation: fadeDown 0.6s ease both; }
+    .brand img { height: 70px; object-fit: contain; margin-bottom: 8px; }
+    .brand p { font-size: 13px; color: var(--muted); }
+
+    .card {
+      background: var(--white); border-radius: 24px;
+      padding: 36px 32px; box-shadow: var(--shadow);
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+
+    .card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; color: var(--charcoal);
+      margin-bottom: 6px;
+    }
+    .card .desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    /* Steps */
+    .steps { display: flex; gap: 8px; margin-bottom: 24px; }
+    .step {
+      flex: 1; height: 4px; border-radius: 99px;
+      background: #ede8f0; transition: background 0.3s;
+    }
+    .step.active   { background: var(--pink); }
+    .step.done     { background: #10b981; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .field { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: var(--charcoal); margin-bottom: 6px; }
+    input {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid #ede8f0; border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      color: var(--charcoal); background: #fafafa; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(232,71,106,0.1); background: var(--white); }
+    input::placeholder { color: #bbb; }
+
+    .otp-input {
+      font-size: 24px; font-weight: 700; letter-spacing: 8px;
+      text-align: center; padding: 16px;
+    }
+
+    .btn {
+      width: 100%; padding: 14px;
+      background: var(--pink); color: white; border: none;
+      border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 8px;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(232,71,106,0.3);
+    }
+    .btn:hover { background: var(--pink-dark); transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .msg { margin-top: 14px; padding: 12px 16px; border-radius: 10px; font-size: 13px; display: none; }
+    .msg.success { background: #edfbf3; color: #1a7a45; display: block; }
+    .msg.error   { background: #fdedf0; color: var(--pink-dark); display: block; }
+
+    .back-link { text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
+    .back-link a { color: var(--pink); text-decoration: none; }
+
+    .resend { text-align: center; margin-top: 12px; font-size: 12px; color: var(--muted); }
+    .resend span { color: var(--pink); cursor: pointer; }
+
+    .success-icon { text-align: center; font-size: 48px; margin-bottom: 16px; }
+
+    @keyframes fadeUp   { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="brand">
+    <img src="logo.png" alt="HerSafe AI"/>
+    <p>Password Recovery</p>
+  </div>
+
+  <div class="card">
+    <!-- Progress steps -->
+    <div class="steps">
+      <div class="step active" id="step1"></div>
+      <div class="step" id="step2"></div>
+      <div class="step" id="step3"></div>
+    </div>
+
+    <!-- Panel 1: Enter Email -->
+    <div class="panel active" id="panel1">
+      <h2>Forgot Password?</h2>
+      <p class="desc">Enter your registered email and we'll send you a 6-digit OTP.</p>
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="email" placeholder="you@example.com"/>
+      </div>
+      <button class="btn" onclick="sendOTP()">Send OTP →</button>
+      <div class="msg" id="msg1"></div>
+      <div class="back-link"><a href="login.html">← Back to Login</a></div>
+    </div>
+
+    <!-- Panel 2: Verify OTP -->
+    <div class="panel" id="panel2">
+      <h2>Enter OTP</h2>
+      <p class="desc" id="otp-desc">We sent a 6-digit OTP to your email.</p>
+      <div class="field">
+        <label>6-digit OTP</label>
+        <input type="text" id="otp" class="otp-input" placeholder="000000" maxlength="6"/>
+      </div>
+      <button class="btn" onclick="verifyOTP()">Verify OTP →</button>
+      <div class="msg" id="msg2"></div>
+      <div class="resend">Didn't receive it? <span onclick="sendOTP(true)">Resend OTP</span></div>
+    </div>
+
+    <!-- Panel 3: Reset Password -->
+    <div class="panel" id="panel3">
+      <h2>Reset Password</h2>
+      <p class="desc">Enter your new password below.</p>
+      <div class="field">
+        <label>New password</label>
+        <input type="password" id="new-password" placeholder="Min. 6 characters"/>
+      </div>
+      <div class="field">
+        <label>Confirm password</label>
+        <input type="password" id="confirm-password" placeholder="Repeat your password"/>
+      </div>
+      <button class="btn" onclick="resetPassword()">Reset Password →</button>
+      <div class="msg" id="msg3"></div>
+    </div>
+
+    <!-- Panel 4: Success -->
+    <div class="panel" id="panel4">
+      <div class="success-icon">✅</div>
+      <h2 style="text-align:center;">Password Reset!</h2>
+      <p class="desc" style="text-align:center;">Your password has been updated successfully.</p>
+      <button class="btn" onclick="window.location.href='login.html'" style="margin-top:16px;">Go to Login →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://hersafe-ai.onrender.com';
+  let userEmail = '';
+  let verifiedOTP = '';
+
+  function showMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = `msg ${type}`;
+  }
+
+  function setStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const s = document.getElementById(`step${i}`);
+      if (i < n) s.className = 'step done';
+      else if (i === n) s.className = 'step active';
+      else s.className = 'step';
+    }
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById(`panel${i}`).className = i === n ? 'panel active' : 'panel';
+    }
+    if (n === 4) {
+      document.querySelectorAll('.step').forEach(s => s.className = 'step done');
+      document.getElementById('panel4').className = 'panel active';
+    }
+  }
+
+  async function sendOTP(resend = false) {
+    const email = document.getElementById('email').value.trim() || userEmail;
+    if (!email) return showMsg('msg1', 'Please enter your email.', 'error');
+
+    const btn = document.querySelector('#panel1 .btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+    try {
+      const res  = await fetch(`${API}/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        userEmail = email;
+        document.getElementById('otp-desc').textContent = `We sent a 6-digit OTP to ${email}`;
+        if (resend) {
+          showMsg('msg2', '✅ New OTP sent!', 'success');
+        } else {
+          setStep(2);
+        }
+      } else {
+        showMsg('msg1', data.error || 'Failed to send OTP.', 'error');
+      }
+    } catch {
+      showMsg('msg1', '⚠️ Backend offline. Please try again.', 'error');
+    }
+
+    if (btn) { btn.disabled = false; btn.textContent = 'Send OTP →'; }
+  }
+
+  async function verifyOTP() {
+    const otp = document.getElementById('otp').value.trim();
+    if (!otp || otp.length !== 6) return showMsg('msg2', 'Please enter the 6-digit OTP.', 'error');
+
+    const btn = document.querySelector('#panel2 .btn');
+    btn.disabled = true; btn.textContent = 'Verifying...';
+
+    try {
+      const res  = await fetch(`${API}/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, otp })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        verifiedOTP = otp;
+        setStep(3);
+      } else {
+        showMsg('msg2', data.error || 'Invalid OTP.', 'error');
+      }
+    } catch {
+      showMsg('msg2', '⚠️ Backend offline. Please try again.', 'error');
+    }
+
+    btn.disabled = false; btn.textContent = 'Verify OTP →';
+  }
+
+  async function resetPassword() {
+    const newPass     = document.getElementById('new-password').value;
+    const confirmPass = document.getElementById('confirm-password').value;
+
+    if (!newPass || !confirmPass) return showMsg('msg3', 'Please fill in all fields.', 'error');
+    if (newPass.length < 6) return showMsg('msg3', 'Password must be at least 6 characters.', 'error');
+    if (newPass !== confirmPass) return showMsg('msg3', 'Passwords do not match.', 'error');
+
+    const btn = document.querySelector('#panel3 .btn');
+    btn.disabled = true; btn.textContent = 'Resetting...';
+
+    try {
+      const res  = await fetch(`${API}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, otp: verifiedOTP, new_password: newPass })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setStep(4);
+      } else {
+        showMsg('msg3', data.error || 'Failed to reset password.', 'error');
+      }
+    } catch {
+      showMsg('msg3', '⚠️ Backend offline. Please try again.', 'error');
+    }
+
+    btn.disabled = false; btn.textContent = 'Reset Password →';
+  }
+</script>
+</body>
+</html>
