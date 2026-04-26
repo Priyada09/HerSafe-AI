@@ -5,6 +5,10 @@ Endpoints:
   POST /report           — analyze + generate PDF evidence report
   POST /alert            — analyze + send trusted contact email alert
   POST /full             — analyze + generate PDF + send alert (all-in-one)
+  POST /signup           — register new user (MongoDB)
+  POST /login            — login user (MongoDB)
+  POST /history          — save analysis history
+  GET  /history          — get user analysis history
 """
 
 from flask import Flask, request, jsonify, send_file
@@ -16,16 +20,20 @@ from datetime import datetime
 from analyzer import analyze_text
 from pdf_report import generate_pdf_report
 from alert_system import send_alert_email, should_send_alert
+from auth import auth
 
 app = Flask(__name__)
 CORS(app)
+
+# Register auth blueprint
+app.register_blueprint(auth)
 
 
 @app.route("/", methods=["GET"])
 def index():
     return jsonify({
         "status": "HerSafe AI v2 running",
-        "endpoints": ["/analyze", "/report", "/alert", "/full"]
+        "endpoints": ["/analyze", "/report", "/alert", "/full", "/signup", "/login", "/history"]
     })
 
 
@@ -44,16 +52,6 @@ def analyze():
 # ── 2. Generate PDF evidence report ───────────────────────────────────────────
 @app.route("/report", methods=["POST"])
 def report():
-    """
-    Expected JSON:
-    {
-      "text":         "threatening message...",
-      "sender_info":  "@username or profile URL",
-      "platform":     "Instagram",
-      "victim_name":  "Priya"
-    }
-    Returns: PDF file download
-    """
     data = request.get_json()
     if not data or "text" not in data:
         return jsonify({"error": "Missing 'text' field"}), 400
@@ -85,14 +83,6 @@ def report():
 # ── 3. Send trusted contact alert ─────────────────────────────────────────────
 @app.route("/alert", methods=["POST"])
 def alert():
-    """
-    Expected JSON:
-    {
-      "text":           "threatening message...",
-      "trusted_email":  "trusted@example.com",
-      "victim_name":    "Priya"
-    }
-    """
     data = request.get_json()
     if not data or "text" not in data:
         return jsonify({"error": "Missing 'text' field"}), 400
@@ -133,18 +123,6 @@ def alert():
 # ── 4. Full pipeline: analyze + PDF + alert ────────────────────────────────────
 @app.route("/full", methods=["POST"])
 def full_pipeline():
-    """
-    Expected JSON:
-    {
-      "text":           "threatening message...",
-      "sender_info":    "@username",
-      "platform":       "Instagram",
-      "victim_name":    "Priya",
-      "trusted_email":  "trusted@example.com"
-    }
-    Returns JSON with analysis result + report download URL + alert status.
-    The PDF is generated and attached to the email automatically.
-    """
     data = request.get_json()
     if not data or "text" not in data:
         return jsonify({"error": "Missing 'text' field"}), 400
@@ -156,10 +134,8 @@ def full_pipeline():
     trusted_email = data.get("trusted_email", "")
     report_id     = f"HS-{datetime.now().strftime('%Y%m%d%H%M%S')}-{str(uuid.uuid4())[:4].upper()}"
 
-    # Step 1: Analyze
     result = analyze_text(text)
 
-    # Step 2: Generate PDF
     pdf_data = generate_pdf_report(
         message_text=text,
         analysis_result=result,
@@ -169,7 +145,6 @@ def full_pipeline():
         report_id=report_id,
     )
 
-    # Step 3: Send alert with PDF attached (only if Suspicious or Dangerous)
     alert_status = {"sent": False, "message": "No alert needed (Safe)"}
     if trusted_email and should_send_alert(result["category"]):
         email_result = send_alert_email(

@@ -238,22 +238,33 @@
       text-align: center;
       max-width: 500px;
     }
+
+    .btn-dashboard {
+      padding: 8px 16px;
+      border: 1.5px solid #E8E5DF;
+      border-radius: 10px;
+      background: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: #888;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      margin-left: auto;
+    }
+    .btn-dashboard:hover { border-color: #D4537E; color: #D4537E; }
   </style>
 </head>
 <body>
 <div class="container">
 
   <header>
-    <div class="logo">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M12 3C8.5 3 6 6 6 9.5c0 5.5 6 11.5 6 11.5s6-6 6-11.5C18 6 15.5 3 12 3z" fill="#D4537E"/>
-        <path d="M12 8v5.5M12 15v.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
-      </svg>
-    </div>
+    <img src="logo.png" alt="HerSafe AI" style="height:48px;object-fit:contain;flex-shrink:0;"/>
     <div>
       <div class="title">HerSafe AI</div>
       <div class="subtitle">AI-powered online threat detection for women's safety</div>
     </div>
+    <button class="btn-dashboard" onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
   </header>
 
   <!-- Input card -->
@@ -336,6 +347,7 @@
 
   const STYLES = {
     Safe:       { bg:"#EAF3DE", text:"#3B6D11", dot:"#639922", bar:"#639922", badgeBg:"#D4EAB8" },
+    Mild:       { bg:"#FEFCE8", text:"#854F0B", dot:"#ca8a04", bar:"#ca8a04", badgeBg:"#fef08a" },
     Suspicious: { bg:"#FAEEDA", text:"#854F0B", dot:"#BA7517", bar:"#EF9F27", badgeBg:"#F5D9A8" },
     Dangerous:  { bg:"#FCEBEB", text:"#A32D2D", dot:"#E24B4A", bar:"#E24B4A", badgeBg:"#F9CBCB" }
   };
@@ -376,13 +388,12 @@
 
       if (!res.ok) throw new Error("Server error: " + res.status);
       const data = await res.json();
-      renderResult(data);
+      renderResult(data, text);
 
     } catch (err) {
-      // Fallback: run client-side analysis if backend is offline (demo mode)
       console.warn("Backend unreachable, running local demo analysis:", err.message);
       const result = localAnalysis(text);
-      renderResult(result);
+      renderResult(result, text);
     }
 
     btn.disabled = false;
@@ -390,9 +401,23 @@
     label.textContent = "Analyze message";
   }
 
-  function renderResult(data) {
+  function saveToHistory(text, category, score) {
+    const history = JSON.parse(localStorage.getItem('hersafe_history') || '[]');
+    history.push({
+      text,
+      category,
+      score,
+      date: new Date().toLocaleDateString('en-IN')
+    });
+    localStorage.setItem('hersafe_history', JSON.stringify(history));
+  }
+
+  function renderResult(data, text) {
     const cat = data.category;
     const s = STYLES[cat] || STYLES["Safe"];
+
+    // Save to history
+    saveToHistory(text || document.getElementById("inputText").value.trim(), cat, data.severity_score);
 
     // Verdict row
     const vrow = document.getElementById("verdictRow");
@@ -401,7 +426,7 @@
       <div class="verdict-dot" style="background:${s.dot}"></div>
       <div class="verdict-name" style="color:${s.text}">${cat}</div>
       <div class="verdict-badge" style="background:${s.badgeBg};color:${s.text}">
-        ${ cat==="Dangerous"?"Immediate concern": cat==="Suspicious"?"Review recommended":"No threat detected" }
+        ${ cat==="Dangerous"?"Immediate concern": cat==="Suspicious"?"Review recommended": cat==="Mild"?"Monitor situation":"No threat detected" }
       </div>
     `;
 
@@ -433,7 +458,7 @@
     }
 
     // Sentiment
-    if (data.sentiment !== undefined) {
+    if (data.sentiment !== undefined && data.sentiment !== null) {
       const sv = data.sentiment;
       let label = sv > 0.2 ? "Positive" : sv < -0.2 ? "Negative" : "Neutral";
       document.getElementById("sentimentVal").textContent = `${sv} (${label})`;
@@ -443,11 +468,10 @@
     resultCard.style.display = "block";
     resultCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-    // Show extra fields card after every analysis
     document.getElementById("extraFields").style.display = "block";
   }
 
-  // ── PDF Report ──────────────────────────────────────────────────────────────
+  // PDF Report
   async function downloadReport() {
     const text = document.getElementById("inputText").value.trim();
     if (!text) return;
@@ -483,7 +507,7 @@
     btn.textContent = "📄 PDF Report";
   }
 
-  // ── Trusted Contact Alert ───────────────────────────────────────────────────
+  // Trusted Contact Alert
   async function sendAlert() {
     const text  = document.getElementById("inputText").value.trim();
     const email = document.getElementById("trustedEmail").value.trim();
@@ -526,7 +550,7 @@
     el.style.color       = type === "safe" ? "#3B6D11" : "#854F0B";
   }
 
-  // ── Local fallback analysis (runs without backend) ──────────────────────────
+  // Local fallback analysis
   const THREATS = ["kill","hurt","find you","know where you live","watch out","regret","come after you","destroy you","make you pay","track you","hunt you","harm","stab","shoot","attack","end you","dead","beat you"];
   const ABUSE   = ["stupid","worthless","idiot","moron","ugly","disgusting","pathetic","loser","trash","garbage","dumb","freak","nobody wants you","hate you"];
   const HARASS  = ["always watching","following","won't leave you alone","never escape","everywhere you go","nobody will believe","your fault","deserve it","stalk","obsessed"];
@@ -541,10 +565,10 @@
     const ha = HARASS.filter(w => lower.includes(w));
     const ma = MANIP.filter(w => lower.includes(w));
 
-    score += th.length * 30;
-    score += ab.length * 15;
-    score += ha.length * 25;
-    score += ma.length * 12;
+    score += th.length * 45;
+    score += ab.length * 20;
+    score += ha.length * 35;
+    score += ma.length * 18;
 
     if (th.length) flags.push("Threatening language");
     if (ab.length) flags.push("Abusive language");
@@ -555,10 +579,11 @@
     if (capsRatio > 0.5 && text.length > 8) { score += 10; flags.push("Aggressive tone (excessive caps)"); }
 
     score = Math.min(score, 100);
-    let category = score >= 60 ? "Dangerous" : score >= 20 ? "Suspicious" : "Safe";
+    let category = score >= 70 ? "Dangerous" : score >= 40 ? "Suspicious" : score >= 15 ? "Mild" : "Safe";
 
     const alerts = {
       Safe: "✅ No significant threat indicators found. This message appears safe.",
+      Mild: "🟡 Mildly concerning language detected. Monitor the situation.",
       Suspicious: "⚠️ Potentially harmful content detected. Proceed with caution.",
       Dangerous: "⛔ Serious threat indicators detected. Consider blocking this sender and reporting to authorities."
     };
