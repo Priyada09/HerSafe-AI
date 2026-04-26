@@ -29,8 +29,7 @@ function getMessageElements() {
   }
   if (host.includes("whatsapp.com")) {
     return document.querySelectorAll(
-      'span.selectable-text.copyable-text, ' +
-      'div.message-in span.selectable-text'
+      '[data-pre-plain-text] span'
     );
   }
   return [];
